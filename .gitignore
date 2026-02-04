@@ -1,0 +1,32 @@
+# --- Python (Raspberry Pi Backend) ---
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+instance/
+.pytest_cache/
+
+# --- PlatformIO (ESP32 Firmware) ---
+.pio/
+.vscode/
+*.lib/
+lib/deps/
+symbol_usage.json
+
+# --- Database & Logs ---
+*.db
+*.sqlite
+*.log
+
+# --- CAD & Mechanical ---
+# We ignore temp and log files, but KEEP .step and .stl exports
+*.log
+*.bak
+*.tmp
+# Ignore internal Fusion360/SolidWorks recovery files
+*.~*
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
