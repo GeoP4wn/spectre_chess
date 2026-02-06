@@ -56,11 +56,11 @@ class ChessStateMachine(StateMachine):
     move_executed = robot_moving.to(human_turn, cond="game_continues") | robot_moving.to(game_over)
     
     # Error handling
-    error_occurred = (human_turn | robot_thinking | robot_moving).to(error)
+    error_occurred = human_turn.to(error) | robot_thinking.to(error) | robot_moving.to(error)
     error_resolved = error.to(human_turn)
     
     # Game termination
-    game_ended = (human_turn | robot_moving).to(game_over)
+    game_ended = human_turn.to(game_over) | robot_moving.to(game_over)
     reset_game = game_over.to(idle)
     
     # Conditions
