@@ -38,7 +38,8 @@
 
 // LED control
 #define LED_DATA_PIN  22
-#define LED_COUNT     64
+#define LED_COUNT     81  // 9x9 grid (4 LEDs per square, shared corners)
+#define LED_GRID_SIZE 9   // 9x9 physical LED grid
 
 // Buttons (active LOW with internal pullup)
 #define BTN1_PIN      25
@@ -511,19 +512,69 @@ void handleLEDCommand(JsonObject& cmd) {
 }
 
 void setLEDSquare(int file, int rank, uint32_t color) {
-    // LED index calculation
-    // Assuming serpentine layout: rank 0 goes left-to-right, rank 1 right-to-left, etc.
-    int ledIndex;
+    /**
+     * Light up a chess square on a 9x9 LED grid.
+     * 
+     * LED Grid Layout (9x9 = 81 LEDs):
+     * - Each chess square has 4 corner LEDs
+     * - Adjacent squares share corner LEDs
+     * - Wiring pattern: serpentine (zigzag) by row
+     * 
+     * Example for square at (file=0, rank=0):
+     *   LEDs at grid positions: (0,0), (1,0), (0,1), (1,1)
+     */
     
-    if (rank % 2 == 0) {
-        // Even ranks: left to right
-        ledIndex = rank * 8 + file;
+    // Chess square (0-7) maps to LED grid corners
+    // Top-left LED of this square
+    int ledX = file;      // LED column (0-8)
+    int ledY = rank;      // LED row (0-8)
+    
+    // Calculate LED indices for 4 corners of this square
+    // Assuming serpentine (zigzag) wiring:
+    //   Row 0: left-to-right (0-8)
+    //   Row 1: right-to-left (17-9)
+    //   Row 2: left-to-right (18-26)
+    //   etc.
+    
+    int ledIndices[4];
+    
+    // Top-left corner
+    if (ledY % 2 == 0) {
+        // Even row: left-to-right
+        ledIndices[0] = ledY * 9 + ledX;
     } else {
-        // Odd ranks: right to left
-        ledIndex = rank * 8 + (7 - file);
+        // Odd row: right-to-left
+        ledIndices[0] = ledY * 9 + (8 - ledX);
     }
     
-    strip.setPixelColor(ledIndex, color);
+    // Top-right corner
+    if (ledY % 2 == 0) {
+        ledIndices[1] = ledY * 9 + (ledX + 1);
+    } else {
+        ledIndices[1] = ledY * 9 + (8 - ledX - 1);
+    }
+    
+    // Bottom-left corner
+    int nextRow = ledY + 1;
+    if (nextRow % 2 == 0) {
+        ledIndices[2] = nextRow * 9 + ledX;
+    } else {
+        ledIndices[2] = nextRow * 9 + (8 - ledX);
+    }
+    
+    // Bottom-right corner
+    if (nextRow % 2 == 0) {
+        ledIndices[3] = nextRow * 9 + (ledX + 1);
+    } else {
+        ledIndices[3] = nextRow * 9 + (8 - ledX - 1);
+    }
+    
+    // Set all 4 corner LEDs to the specified color
+    for (int i = 0; i < 4; i++) {
+        if (ledIndices[i] >= 0 && ledIndices[i] < LED_COUNT) {
+            strip.setPixelColor(ledIndices[i], color);
+        }
+    }
 }
 
 void updateLEDs() {

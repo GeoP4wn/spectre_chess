@@ -2,7 +2,7 @@
  * ESP32 Motor Controller Firmware
  * 
  * Responsibilities:
- * - Control 2x TMC2209 stepper drivers for H-Bot gantry system
+ * - Control 2x TMC2226 stepper drivers for H-Bot gantry system
  * - Electromagnet control (4x electromagnets via MOSFETs)
  * - Limit switch homing
  * - PWM fan control (4x fans)
@@ -10,7 +10,7 @@
  * 
  * Hardware:
  * - ESP32-S3 DevKit C-1
- * - 2x TMC2209 stepper drivers
+ * - 2x TMC2226 stepper drivers
  * - 2x NEMA17 stepper motors (0.7A)
  * - 4x P25/20 electromagnets (12V)
  * - 4x IRFL44N MOSFETs for electromagnet switching
@@ -30,18 +30,20 @@
 
 // ==================== PIN DEFINITIONS ====================
 
-// TMC2209 Motor Drivers
+// TMC2226 Motor Drivers
 // Motor A (X-axis component)
 #define MOTOR_A_STEP_PIN    2
 #define MOTOR_A_DIR_PIN     3
 #define MOTOR_A_EN_PIN      4
-#define MOTOR_A_UART_PIN    5   // Single-wire UART with 1k resistor
+#define MOTOR_A_TX_PIN      5   // ESP32 TX to TMC2226
+#define MOTOR_A_RX_PIN      6   // ESP32 RX from TMC2226
 
 // Motor B (Y-axis component)
-#define MOTOR_B_STEP_PIN    6
-#define MOTOR_B_DIR_PIN     7
-#define MOTOR_B_EN_PIN      8
-#define MOTOR_B_UART_PIN    9
+#define MOTOR_B_STEP_PIN    7
+#define MOTOR_B_DIR_PIN     8
+#define MOTOR_B_EN_PIN      9
+#define MOTOR_B_TX_PIN      10  // ESP32 TX to TMC2226
+#define MOTOR_B_RX_PIN      11  // ESP32 RX from TMC2226
 
 // Electromagnets (via MOSFETs, active HIGH)
 #define MAGNET_1_PIN        16
@@ -65,13 +67,13 @@
 
 // ==================== MOTOR CONFIGURATION ====================
 
-// TMC2209 UART addresses
-#define MOTOR_A_ADDRESS     0b00
-#define MOTOR_B_ADDRESS     0b01
+// TMC2226 UART addresses (set via MS1_AD0 and MS2_AD1 pins on driver)
+#define MOTOR_A_ADDRESS     0b00  // Both MS pins LOW
+#define MOTOR_B_ADDRESS     0b01  // MS1_AD0 HIGH, MS2_AD1 LOW
 
 // Stepper motor specs
 #define STEPS_PER_REV       200     // 1.8° stepper
-#define MICROSTEPS          16      // TMC2209 microstepping
+#define MICROSTEPS          16      // TMC2226 microstepping
 #define STEPS_PER_MM        80      // Steps per mm (configure based on pulley size)
 
 // Speed settings (steps/second)
@@ -90,9 +92,13 @@
 
 // ==================== GLOBAL VARIABLES ====================
 
-// TMC2209 driver instances (software serial on single pin)
-TMC2209Stepper driverA(&Serial2, 0.11f, MOTOR_A_ADDRESS);
-TMC2209Stepper driverB(&Serial2, 0.11f, MOTOR_B_ADDRESS);
+// Hardware Serial for TMC2226 communication
+// Using Serial2 with separate TX and RX pins
+HardwareSerial MotorSerial(2);  // Use UART2
+
+// TMC2226 driver instances
+TMC2226Stepper driverA(&MotorSerial, 0.11f, MOTOR_A_ADDRESS);
+TMC2226Stepper driverB(&MotorSerial, 0.11f, MOTOR_B_ADDRESS);
 
 // Current position (in steps)
 long currentStepsX = 0;
@@ -150,8 +156,10 @@ void setup() {
     // Initialize UART for Pi communication
     Serial1.begin(UART_BAUD, SERIAL_8N1, UART_RX_PIN, UART_TX_PIN);
     
-    // Initialize UART for TMC2209 drivers
-    Serial2.begin(115200, SERIAL_8N1, MOTOR_A_UART_PIN, MOTOR_A_UART_PIN);
+    // Initialize UART for TMC2226 drivers (both share same UART bus)
+    // Motor A TX connects to both drivers' PDN_UART via 1kΩ resistors
+    // Motor A RX also connects (for reading back status)
+    MotorSerial.begin(115200, SERIAL_8N1, MOTOR_A_RX_PIN, MOTOR_A_TX_PIN);
     
     // Setup hardware
     setupPins();
@@ -237,10 +245,10 @@ void setupPins() {
     Serial.println("Pins configured");
 }
 
-// ==================== TMC2209 SETUP ====================
+// ==================== TMC2226 SETUP ====================
 
 void setupMotorDrivers() {
-    Serial.println("Configuring TMC2209 drivers...");
+    Serial.println("Configuring TMC2226 drivers...");
     
     // Driver A configuration
     driverA.begin();
@@ -258,7 +266,7 @@ void setupMotorDrivers() {
     driverB.pwm_autoscale(true);
     driverB.en_spreadCycle(false);
     
-    Serial.println("TMC2209 drivers configured");
+    Serial.println("TMC2226 drivers configured");
     
     // Test: Read back configuration
     Serial.print("Driver A current: ");
