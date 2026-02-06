@@ -208,6 +208,43 @@ class HardwareInterface:
         
         await self._send_sensor_command(command)
     
+    async def show_live_evaluation(self, evaluations: Dict[int, Dict[str, Any]]):
+        """
+        Display live move evaluations on LED matrix.
+        Each legal destination square shows a color based on move quality.
+        
+        Args:
+            evaluations: Dict from game_manager.get_live_evaluation_for_piece()
+                        Maps to_square -> {'color': [r,g,b], 'classification': str, ...}
+        """
+        logger.info(f"Displaying live evaluation for {len(evaluations)} possible moves")
+        
+        # Build color map for each square
+        square_colors = []
+        for square_num, eval_data in evaluations.items():
+            file = square_num % 8
+            rank = square_num // 8
+            color = eval_data['color']
+            
+            square_colors.append({
+                'square': [file, rank],
+                'color': color,
+                'classification': eval_data['classification']
+            })
+        
+        command = {
+            "cmd": "show_evaluation_colors",
+            "squares": square_colors,
+            "duration": 0  # Stay on until piece is placed or canceled
+        }
+        
+        await self._send_sensor_command(command)
+    
+    async def clear_live_evaluation(self):
+        """Clear the live evaluation display"""
+        command = {"cmd": "clear_evaluation"}
+        await self._send_sensor_command(command)
+    
     async def flash_error(self):
         """Flash LEDs red to indicate an error"""
         logger.info("Flashing error indication")

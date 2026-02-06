@@ -372,14 +372,14 @@ class ChessBoardController:
             await self.resign_game()
         elif "hint" in command:
             await self.show_hint()
-        # Add more commands as needed
+        #TODO Add more commands as needed
     
     async def _handle_button_event(self, event):
         """
         Process a button press or rotary encoder turn.
         """
         logger.info(f"Button event: {event}")
-        # Implement button logic here
+        #TODO Implement button logic here
     
     async def _handle_game_over(self):
         """
