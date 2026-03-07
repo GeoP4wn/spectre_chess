@@ -1,3 +1,4 @@
+#!/home/geop4wn/Documents/code/spectre_chess_copy/.venv/bin/env python3
 """
 Main entry point for the Smart Chess Board system.
 Implements the async event loop that coordinates all subsystems.
@@ -13,6 +14,7 @@ from hardware_interface import HardwareInterface
 from database_manager import DatabaseManager
 from user_manager import UserManager
 from voice_service import VoiceService
+from screen_ui import ScreenUI
 
 # Configure logging
 logging.basicConfig(
@@ -86,6 +88,7 @@ class ChessBoardController:
         self.db_manager: Optional[DatabaseManager] = None
         self.user_manager: Optional[UserManager] = None
         self.voice_service: Optional[VoiceService] = None
+        self.screen_ui: Optional[ScreenUI] = None
         
         # Task management
         self.background_tasks: list[asyncio.Task] = []
@@ -119,6 +122,9 @@ class ChessBoardController:
             self.voice_service = VoiceService()
             await self.voice_service.initialize()
             
+            # Initialize screen UI
+            self.screen_ui = ScreenUI(self)
+            
             logger.info("Initialization complete")
             return True
             
@@ -150,7 +156,14 @@ class ChessBoardController:
         
         # Main loop - wait for shutdown signal
         try:
-            await self.shutdown_event.wait()
+            while not self.shutdown_event.is_set():
+                # Update screen UI (runs one frame)
+                if self.screen_ui and not self.screen_ui.run_frame():
+                    # UI was closed
+                    self.shutdown_event.set()
+                    break
+                
+                await asyncio.sleep(0.016)  # ~60 FPS
         except asyncio.CancelledError:
             logger.info("Main loop cancelled")
         finally:
@@ -176,6 +189,9 @@ class ChessBoardController:
         
         if self.db_manager:
             await self.db_manager.close()
+        
+        if self.screen_ui:
+            self.screen_ui.quit()
         
         logger.info("Shutdown complete")
     
@@ -297,6 +313,9 @@ class ChessBoardController:
                     logger.warning(f"Illegal move detected: {move}")
                     # Flash LEDs red to indicate error
                     await self.hardware.flash_error()
+                    # Show error on screen
+                    if self.screen_ui:
+                        self.screen_ui.show_error("Illegal move!")
                     self.state_machine.error_occurred()
                     
         except Exception as e:
@@ -372,14 +391,14 @@ class ChessBoardController:
             await self.resign_game()
         elif "hint" in command:
             await self.show_hint()
-        #TODO Add more commands as needed
+        # Add more commands as needed
     
     async def _handle_button_event(self, event):
         """
         Process a button press or rotary encoder turn.
         """
         logger.info(f"Button event: {event}")
-        #TODO Implement button logic here
+        # Implement button logic here
     
     async def _handle_game_over(self):
         """
@@ -400,11 +419,11 @@ class ChessBoardController:
     
     # ==================== Public API ====================
     
-    async def start_new_game(self, mode: str = "VS_ENGINE", user_id: Optional[int] = None):
+    async def start_new_game(self, game_mode: str = "VS_ENGINE", user_id: Optional[int] = None):
         """
-        Start a new game with specified mode.
+        Start a new game with specified game_mode.
         """
-        logger.info(f"Starting new game: mode={mode}, user_id={user_id}")
+        logger.info(f"Starting new game: game_mode={game_mode}, user_id={user_id}")
         
         # Load user settings if provided
         settings = None
@@ -412,15 +431,15 @@ class ChessBoardController:
             settings = await self.user_manager.get_user_settings(user_id)
             self.current_user_id = user_id
         
-        # Create game manager with mode
-        self.game_manager = GameManager(mode=mode, settings=settings)
+        # Create game manager with game_mode
+        self.game_manager = GameManager(game_mode=game_mode, settings=settings)
         
         # Create game record in database
         if self.db_manager:
             self.game_manager.game_id = await self.db_manager.create_game(
                 white_user_id=user_id,
                 black_user_id=None,  # AI or online opponent
-                mode=mode
+                game_mode=game_mode
             )
         
         # Transition to human turn

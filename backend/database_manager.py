@@ -17,7 +17,7 @@ class DatabaseManager:
     Uses SQLite with aiosqlite for async operations.
     """
     
-    def __init__(self, db_path: str = "chessboard.db"):
+    def __init__(self, db_path: str = "../chessboard.db"):
         self.db_path = Path(db_path)
         self.connection: Optional[aiosqlite.Connection] = None
     
