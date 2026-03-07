@@ -22,19 +22,19 @@ class GameManager:
     Acts as the bridge between the physical board and chess logic.
     """
     
-    def __init__(self, mode: str = "VS_ENGINE", settings: Optional[Dict[str, Any]] = None, 
+    def __init__(self, game_mode: str = "VS_ENGINE", settings: Optional[Dict[str, Any]] = None, 
                  human_color: Optional[chess.Color] = None):
         """
         Initialize game manager with specified mode.
         
         Args:
-            mode: Game mode (OFFLINE_PVP, VS_ENGINE, ONLINE_LICHESS, ENGINE_VS_ENGINE, ANALYSIS)
+            game_mode: Game mode (OFFLINE_PVP, VS_ENGINE, ONLINE_LICHESS, ENGINE_VS_ENGINE, ANALYSIS)
             settings: User settings dictionary
             human_color: Which side human plays (WHITE/BLACK/None for PVP). 
                         For ONLINE_LICHESS, None means accept either color from server
         """
         self.board = chess.Board()
-        self.mode = mode
+        self.game_mode = game_mode
         self.settings = settings or {}
         self.game_id: Optional[int] = None
         
@@ -53,20 +53,20 @@ class GameManager:
         self.analysis_position_index = 0  # Current position in loaded PGN
         
         # Set up players based on mode
-        self._setup_players(mode, settings, human_color)
+        self._setup_players(game_mode, settings, human_color)
         
-        logger.info(f"GameManager initialized: mode={mode}")
+        logger.info(f"GameManager initialized: mode={game_mode}")
     
-    def _setup_players(self, mode: str, settings: Optional[Dict[str, Any]], 
+    def _setup_players(self, game_mode: str, settings: Optional[Dict[str, Any]], 
                       human_color: Optional[chess.Color]):
         """Set up the input providers based on game mode"""
-        if mode == "OFFLINE_PVP":
+        if game_mode == "OFFLINE_PVP":
             # Both players are local humans
             self.white_player = LocalProvider()
             self.black_player = LocalProvider()
             self.human_color = None  # Both are human
             
-        elif mode == "VS_ENGINE":
+        elif game_mode == "VS_ENGINE":
             # Get engine difficulty from settings
             difficulty = settings.get('engine_difficulty', 5) if settings else 5
             
@@ -84,7 +84,7 @@ class GameManager:
             
             self.human_color = human_color
             
-        elif mode == "ONLINE_LICHESS":
+        elif game_mode == "ONLINE_LICHESS":
             # Lichess token should be stored in settings
             token = settings.get('lichess_token') if settings else None
             lichess_provider = LichessProvider(token=token)
@@ -101,7 +101,7 @@ class GameManager:
             
             self.human_color = human_color  # May be None initially
             
-        elif mode == "ENGINE_VS_ENGINE":
+        elif game_mode == "ENGINE_VS_ENGINE":
             # Both players are engines (for demonstration/analysis)
             difficulty_white = settings.get('engine_difficulty_white', 10) if settings else 10
             difficulty_black = settings.get('engine_difficulty_black', 10) if settings else 10
@@ -110,7 +110,7 @@ class GameManager:
             self.black_player = EngineProvider(difficulty=difficulty_black)
             self.human_color = None  # No human player
             
-        elif mode == "ANALYSIS":
+        elif game_mode == "ANALYSIS":
             # Analysis mode - can load PGN and step through
             # No active players, moves are manually controlled
             self.white_player = None
@@ -119,7 +119,7 @@ class GameManager:
             self.analysis_mode = True
             
         else:
-            raise ValueError(f"Unknown game mode: {mode}")
+            raise ValueError(f"Unknown game mode: {game_mode}")
     
     # ==================== Board State Management ====================
     

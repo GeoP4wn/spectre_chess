@@ -432,14 +432,14 @@ class ChessBoardController:
             self.current_user_id = user_id
         
         # Create game manager with game_mode
-        self.game_manager = GameManager(game_mode=game_mode, settings=settings)
+        self.game_manager = GameManager(game_mode = game_mode, settings=settings)
         
         # Create game record in database
         if self.db_manager:
             self.game_manager.game_id = await self.db_manager.create_game(
                 white_user_id=user_id,
                 black_user_id=None,  # AI or online opponent
-                game_mode=game_mode
+                game_mode = game_mode
             )
         
         # Transition to human turn
