@@ -24,17 +24,17 @@
 // ==================== PIN DEFINITIONS ====================
 
 // Multiplexer control pins (shared by all 4 multiplexers)
-#define MUX_S0_PIN    2
-#define MUX_S1_PIN    3
-#define MUX_S2_PIN    4
-#define MUX_S3_PIN    5
+#define MUX_S0_PIN    23
+#define MUX_S1_PIN    22
+#define MUX_S2_PIN    27
+#define MUX_S3_PIN    14
 
 // Multiplexer enable/output pins (one per multiplexer)
-#define MUX_EN_PIN    16  // Enable (active LOW)
-#define MUX1_OUT_PIN  17  // Multiplexer 1 output (rows 0-1)
-#define MUX2_OUT_PIN  18  // Multiplexer 2 output (rows 2-3)
-#define MUX3_OUT_PIN  19  // Multiplexer 3 output (rows 4-5)
-#define MUX4_OUT_PIN  21  // Multiplexer 4 output (rows 6-7)
+#define MUX_EN_PIN    0  // Enable (active LOW)
+#define MUX1_OUT_PIN  32  // Multiplexer 1 output (rows 0-1)
+#define MUX2_OUT_PIN  33  // Multiplexer 2 output (rows 2-3)
+#define MUX3_OUT_PIN  25  // Multiplexer 3 output (rows 4-5)
+#define MUX4_OUT_PIN  26  // Multiplexer 4 output (rows 6-7)
 
 // LED control
 #define LED_DATA_PIN  22

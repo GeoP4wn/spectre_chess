@@ -19,8 +19,8 @@ from datetime import datetime, timedelta
 pygame.init()
 
 # Screen configuration
-SCREEN_WIDTH = 1024
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 600
+SCREEN_HEIGHT = 1024
 FPS = 60
 
 # Colors (Material Design inspired)

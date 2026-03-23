@@ -32,37 +32,37 @@
 
 // TMC2226 Motor Drivers
 // Motor A (X-axis component)
-#define MOTOR_A_STEP_PIN    2
-#define MOTOR_A_DIR_PIN     3
-#define MOTOR_A_EN_PIN      4
-#define MOTOR_A_TX_PIN      5   // ESP32 TX to TMC2226
-#define MOTOR_A_RX_PIN      6   // ESP32 RX from TMC2226
+#define MOTOR_A_STEP_PIN    14
+#define MOTOR_A_DIR_PIN     12
+#define MOTOR_A_EN_PIN      0
+#define MOTOR_A_TX_PIN      1   // ESP32 TX to TMC2226
+#define MOTOR_A_RX_PIN      3   // ESP32 RX from TMC2226
 
 // Motor B (Y-axis component)
-#define MOTOR_B_STEP_PIN    7
-#define MOTOR_B_DIR_PIN     8
-#define MOTOR_B_EN_PIN      9
-#define MOTOR_B_TX_PIN      10  // ESP32 TX to TMC2226
-#define MOTOR_B_RX_PIN      11  // ESP32 RX from TMC2226
+#define MOTOR_B_STEP_PIN    27
+#define MOTOR_B_DIR_PIN     13
+#define MOTOR_B_EN_PIN      0
+#define MOTOR_B_TX_PIN      1  // ESP32 TX to TMC2226
+#define MOTOR_B_RX_PIN      3  // ESP32 RX from TMC2226
 
 // Electromagnets (via MOSFETs, active HIGH)
-#define MAGNET_1_PIN        16
-#define MAGNET_2_PIN        17
-#define MAGNET_3_PIN        18
-#define MAGNET_4_PIN        19
+#define MAGNET_1_PIN        26
+#define MAGNET_2_PIN        25
+#define MAGNET_3_PIN        33
+#define MAGNET_4_PIN        32
 
 // Limit switch (active LOW with pullup)
-#define LIMIT_SWITCH_PIN    32
+#define LIMIT_SWITCH_PIN    39
 
 // PWM Fan control (via level shifter to 5V)
-#define FAN_1_PIN           25
-#define FAN_2_PIN           26
-#define FAN_3_PIN           27
-#define FAN_4_PIN           33
+#define FAN_1_PIN           5
+#define FAN_2_PIN           18
+#define FAN_3_PIN           19
+#define FAN_4_PIN           21
 
 // UART communication with Raspberry Pi
-#define UART_RX_PIN         1   // RX from Pi
-#define UART_TX_PIN         3   // TX to Pi
+#define UART_RX_PIN         16   // RX from Pi
+#define UART_TX_PIN         17   // TX to Pi
 #define UART_BAUD           115200
 
 // ==================== MOTOR CONFIGURATION ====================
@@ -87,8 +87,8 @@
 #define MOTOR_CURRENT_HOLD  200     // Lower current when holding
 
 // Board dimensions (in mm)
-#define MAX_X_MM            400.0
-#define MAX_Y_MM            400.0
+#define MAX_X_MM            560.0
+#define MAX_Y_MM            560.0
 
 // ==================== GLOBAL VARIABLES ====================
 
@@ -96,9 +96,9 @@
 // Using Serial2 with separate TX and RX pins
 HardwareSerial MotorSerial(2);  // Use UART2
 
-// TMC2226 driver instances
-TMC2226Stepper driverA(&MotorSerial, 0.11f, MOTOR_A_ADDRESS);
-TMC2226Stepper driverB(&MotorSerial, 0.11f, MOTOR_B_ADDRESS);
+// TMC2226 driver instances (2209 is the most complete library and should work)
+TMC2209Stepper driverA(&MotorSerial, 0.11f, MOTOR_A_ADDRESS);
+TMC2209Stepper driverB(&MotorSerial, 0.11f, MOTOR_B_ADDRESS);
 
 // Current position (in steps)
 long currentStepsX = 0;
