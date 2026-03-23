@@ -8,3 +8,4 @@ This project is designed to be a robotic chessboard constrained to an external h
 The main computing is done by a Raspberry Pi. The Raspberry Pi controls two ESP32s. One is responsible for the motors and magnets, the other is responsible for the sensors, LEDs and buttons.
 
 
+AI Disclosure: Generative AI was used to build the basic structure and async loop of the codebase
